@@ -1,4 +1,4 @@
-﻿import Graphics.UI.WX
+import Graphics.UI.WX
 import Data.Array.IArray
 import Data.List.Split
 
@@ -28,10 +28,11 @@ gui = do
   
   -- прикрепляем список кнопок к окну
   btnSet wnd btns
+  
   --добавляем действие по нажатию на кнопку на клаве
   set wnd [on (charKey 's') := putStrLn "S button pushed",
 		   on (charKey 'w') := putStrLn "W button pushed",
 		   on (charKey 'a') := putStrLn "A button pushed",
 		   on (charKey 'D') := putStrLn "D button pushed"]
-		   
+
   return ()
