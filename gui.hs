@@ -33,6 +33,6 @@ gui = do
   set wnd [on (charKey 's') := putStrLn "S button pushed",
 		   on (charKey 'w') := putStrLn "W button pushed",
 		   on (charKey 'a') := putStrLn "A button pushed",
-		   on (charKey 'D') := putStrLn "D button pushed"]
+		   on (charKey 'd') := putStrLn "D button pushed"]
 
   return ()
