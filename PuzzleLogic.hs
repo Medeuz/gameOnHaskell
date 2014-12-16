@@ -49,27 +49,25 @@ generateGame = (listArray (0,15)) `liftM` (generateRandonList)
 			if val then arr else generateRandonList
 
 -- проверка на допустимость хода
-checkMove :: (Ix i, Num a, Monad m, Eq a) => Moves -> Array i a -> m Bool
-checkMove m arr = do
-	let i = elemIndex 16 $ elems arr
-	if (isJust i) then do
-		let j = fromJust i
+checkMove :: (Ix i, Num a, Eq a) => Moves -> Array i a -> Bool
+checkMove m arr = if (isJust i) then
 		case m of
-			UpMove -> return $ (j `div` 4) > 0
-			DownMove -> return $ (j `div` 4) < 3
-			RightMove -> return $ (j `mod` 4) < 3
-			LeftMove -> return $ (j `mod` 4) > 0
-	else return False
+			UpMove ->(j `div` 4) > 0
+			DownMove -> (j `div` 4) < 3
+			RightMove -> (j `mod` 4) < 3
+			LeftMove -> (j `mod` 4) > 0
+	else False
+	where 
+		i = elemIndex 16 $ elems arr
+		j = fromJust i
 	
 -- переходы
-moving :: (Num a, Monad m, Eq a) => Moves -> Array Integer a -> m (Array Integer a)
-moving m arr = do
-	check <- checkMove m arr
-	if check then do
-		let i = fromIntegral (fromJust $ elemIndex 16 $ elems arr) :: Integer
-		return $ swap i (moveTo m i) arr
-	else return arr
+moving :: (Num a, Eq a) => Moves -> Array Integer a -> Array Integer a
+moving m arr = if (checkMove m arr) then
+		swap i (moveTo m i) arr
+	else arr
 	where
+		i = fromIntegral (fromJust $ elemIndex 16 $ elems arr) :: Integer
 		moveTo :: Moves -> Integer -> Integer
 		moveTo m i 
 			| m == UpMove = i - 4
@@ -113,11 +111,11 @@ test :: IO ()
 test = do
 	t <- generateGame
 	print t
-	r <- moving UpMove t
+	let r = moving UpMove t
 	print r
-	r <- moving DownMove t
+	let r = moving DownMove t
 	print r
-	r <- moving RightMove t
+	let r = moving RightMove t
 	print r
-	r <- moving LeftMove t
+	let r = moving LeftMove t
 	print r
