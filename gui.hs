@@ -8,41 +8,40 @@ import Data.IORef
 import Control.Monad as Monad 
 
 
--- структура для хранения состояния
+-- структуры данных
 data GameState = GameState {
-	gameList :: Array Integer Integer,
-	btnsList :: [Button ()]
+	board :: Board,
+	buttons :: [Button ()]
 }
 
--- получаем корректный label кнопки
+-- возвращает корректный label кнопки
 btnLabel :: Integer -> String
 btnLabel x = if (x == 16) then "" else (show x)
 
--- получаем набор кнопок по массиву
-getBtns :: Window a -> Array Integer Integer -> IO ([Button ()])
-getBtns wnd arr = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elems arr)
+-- возвращает набор кнопок по Board
+getBtns :: Window a -> Board -> IO ([Button ()])
+getBtns wnd brd = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elems brd)
 
--- прикрепляем кнопки к окну
+-- прикрепляет кнопки к окну
 placeBtns :: (Form f, Widget w) => f -> [w] -> IO ()
 placeBtns wnd btns = set wnd [layout := column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
 
--- обновляем label на кнопках в соответствии с массивом
-updateBtns :: [Button ()] -> Array Integer Integer -> IO ()
-updateBtns btns arr = do
-	let z = zip (elems arr) btns
+-- обновляет label на кнопках в соответствии с Board
+updateBtns :: [Button ()] -> Board -> IO ()
+updateBtns btns brd = do
+	let z = zip (elems brd) btns
 	forM_ z $ \p -> set (snd p) [text := (btnLabel (fst p))]
 
 -- callback-функция сделать ход
 makeMove :: Moves -> IORef GameState -> IO ()
 makeMove m ref = do
 	st <- readIORef ref
-	let game = gameList st
-	let btns = btnsList st
-	game' <- moving m game
+	let (brd, btns) = (board st, buttons st)
+	brd' <- moving m brd
 	putStrLn $ "Сделан ход: " ++ show m
-	updateBtns btns game'
-	Monad.when (checkWin game') gameWinAction
-	writeIORef ref (GameState game' btns)
+	updateBtns btns brd'
+	Monad.when (checkWin brd') gameWinAction
+	writeIORef ref (GameState brd' btns)
 
 -- действие при победе
 gameWinAction :: IO ()
@@ -52,10 +51,10 @@ gameWinAction = putStrLn $ "ПОБЕДА!"
 newGame :: IORef GameState -> IO ()
 newGame ref = do
 	st <- readIORef ref
-	let btns = btnsList st
-	game' <- generateGame
-	updateBtns btns game'
-	writeIORef ref (GameState game' btns)
+	let btns = buttons st
+	brd' <- generateGame
+	updateBtns btns brd'
+	writeIORef ref (GameState brd' btns)
 	
 -- диалоговое окно, открытия файла
 loadGame :: IORef GameState -> Window a -> Var(Maybe FilePath) -> IO ()
@@ -67,10 +66,10 @@ loadGame ref win filePath = do
 		Just path -> do
 		varSet filePath $ Just path
 		st <- readIORef ref
-		let btns = btnsList st
-		game' <- readGameFromFile path
-		updateBtns btns game'
-		writeIORef ref (GameState game' btns)
+		let btns = buttons st
+		brd' <- readGameFromFile path
+		updateBtns btns brd'
+		writeIORef ref (GameState brd' btns)
 
 -- диалоговое окно, сохранения файла		
 saveGame :: IORef GameState -> Window a -> Var(Maybe FilePath) -> IO ()
@@ -82,8 +81,8 @@ saveGame ref win filePath = do
 		Just path -> do
 			varSet filePath $ Just path
 			st <- readIORef ref
-			let game = gameList st
-			writeGameToFile game path
+			let brd = board st
+			writeGameToFile brd path
 		
 main :: IO ()
 main = start gui
@@ -94,14 +93,14 @@ gui = do
   wnd <- frame [ text := "Пятнашки", virtualSize := sz 300 300, bgcolor := blue ]
     
   -- создаем список кнопок по массиву
-  game <- generateGame
-  btns <- getBtns wnd game
+  brd <- generateGame
+  btns <- getBtns wnd brd
   
   -- прикрепляем список кнопок к окну
   placeBtns wnd btns
 
   -- IORef
-  let st = GameState game btns
+  let st = GameState brd btns
   ref <- newIORef st
   
   -- добавляем сверху меню, с новой игрой, загрузкой и сохранением игры

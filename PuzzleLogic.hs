@@ -10,6 +10,7 @@ import Control.Monad.ST
 import Data.Array.ST
 import Data.List
 
+type Board = Array Integer Integer
 data Moves = UpMove | DownMove | RightMove | LeftMove
 	deriving (Show, Eq)
 
