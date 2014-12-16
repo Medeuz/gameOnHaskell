@@ -37,7 +37,7 @@ makeMove :: Moves -> IORef GameState -> IO () -> IO ()
 makeMove m ref winAction= do
 	st <- readIORef ref
 	let (brd, btns) = (board st, buttons st)
-	brd' <- moving m brd
+	let brd' = moving m brd
 	putStrLn $ "Сделан ход: " ++ show m
 	updateBtns btns brd'
 	Monad.when (checkWin brd') winAction
