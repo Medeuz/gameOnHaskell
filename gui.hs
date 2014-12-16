@@ -7,6 +7,8 @@ import PuzzleLogic
 import Data.IORef
 import Control.Monad as Monad 
 
+
+-- структура для хранения состояния
 data GameState = GameState {
 	gameList :: Array Integer Integer,
 	btnsList :: [Button ()]
@@ -56,14 +58,19 @@ newGame ref = do
 	writeIORef ref (GameState game' btns)
 	
 -- диалоговое окно, открытия файла
-loadGame :: Window a -> Var(Maybe FilePath) -> IO ()
-loadGame win filePath = do
+loadGame :: IORef GameState -> Window a -> Var(Maybe FilePath) -> IO ()
+loadGame ref win filePath = do
 	maybePath <- fileOpenDialog win True True "Загрузка игры..." [("Any file",["*.*"]),("Text",["*.txt"])] "" ""
 	print maybePath
 	case maybePath of
 		Nothing -> return ()
 		Just path -> do
 		varSet filePath $ Just path
+		st <- readIORef ref
+		let btns = btnsList st
+		game' <- readGameFromFile path
+		updateBtns btns game'
+		writeIORef ref (GameState game' btns)
 
 -- диалоговое окно, сохранения файла		
 saveGame :: IORef GameState -> Window a -> Var(Maybe FilePath) -> IO ()
@@ -106,7 +113,7 @@ gui = do
   
   -- обавляем действия по кнопке загрузить игру
   filePath <- varCreate Nothing
-  evtHandlerOnMenuCommand wnd wxID_OPEN $ loadGame wnd filePath --по нажатию сохранить в FilePath путь к выбранному файлу
+  evtHandlerOnMenuCommand wnd wxID_OPEN $ loadGame ref wnd filePath --по нажатию сохранить в FilePath путь к выбранному файлу
   
   -- добавляем действия по кнопке сохранить игру
   evtHandlerOnMenuCommand wnd wxID_SAVEAS $ saveGame ref wnd filePath
