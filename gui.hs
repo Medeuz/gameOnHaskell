@@ -20,11 +20,11 @@ btnLabel x = if (x == 16) then "" else (show x)
 
 -- возвращает набор кнопок по Board
 getBtns :: Window a -> Board -> IO ([Button ()])
-getBtns wnd brd = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elems brd)
+getBtns wnd brd = sequence $ map (\x -> button wnd [text := (btnLabel x), clientSize := sz 50 50]) (elems brd)
 
 -- прикрепляет кнопки к окну
 placeBtns :: (Form f, Widget w) => f -> [w] -> IO ()
-placeBtns wnd btns = set wnd [layout := column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
+placeBtns wnd btns = set wnd [layout := minsize (sz 300 155) $column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
 
 -- обновляет label на кнопках в соответствии с Board
 updateBtns :: [Button ()] -> Board -> IO ()
@@ -87,7 +87,7 @@ gui :: IO ()
 gui = do
   -- создаем окно
   let wndTitle = "Игра \"Пятнашки\""
-  wnd <- frame [ text := wndTitle, virtualSize := sz 300 300, bgcolor := blue ]
+  wnd <- frame [ text := wndTitle, bgcolor := blue ]
   
   -- вспомогательная функция, для вывода небольшого окна с текстом  
   let say desc = infoDialog wnd wndTitle desc
@@ -127,7 +127,8 @@ gui = do
   set wnd [menuBar := [topLevelMenu, topLevelMenuHelp]]
   
   -- добавляем действие по нажатию на кнопку на клаве
-  set wnd [on (charKey 's') := makeMove UpMove ref winPopup,
+  set wnd [ 
+		   on (charKey 's') := makeMove UpMove ref winPopup,
 		   on (charKey 'w') := makeMove DownMove ref winPopup,
 		   on (charKey 'a') := makeMove RightMove ref winPopup,
 		   on (charKey 'd') := makeMove LeftMove ref winPopup]
