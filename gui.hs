@@ -33,19 +33,15 @@ updateBtns btns brd = do
 	forM_ z $ \p -> set (snd p) [text := (btnLabel (fst p))]
 
 -- callback-функция сделать ход
-makeMove :: Moves -> IORef GameState -> IO ()
-makeMove m ref = do
+makeMove :: Moves -> IORef GameState -> IO () -> IO ()
+makeMove m ref winAction= do
 	st <- readIORef ref
 	let (brd, btns) = (board st, buttons st)
 	brd' <- moving m brd
 	putStrLn $ "Сделан ход: " ++ show m
 	updateBtns btns brd'
-	Monad.when (checkWin brd') gameWinAction
+	Monad.when (checkWin brd') winAction
 	writeIORef ref (GameState brd' btns)
-
--- действие при победе
-gameWinAction :: IO ()
-gameWinAction = putStrLn $ "ПОБЕДА!"
 
 -- новая игра
 newGame :: IORef GameState -> IO ()
@@ -90,8 +86,14 @@ main = start gui
 gui :: IO ()
 gui = do
   -- создаем окно
-  wnd <- frame [ text := "Пятнашки", virtualSize := sz 300 300, bgcolor := blue ]
-    
+  let wndTitle = "Игра \"Пятнашки\""
+  wnd <- frame [ text := wndTitle, virtualSize := sz 300 300, bgcolor := blue ]
+  
+  -- вспомогательная функция, для вывода небольшого окна с текстом  
+  let say desc = infoDialog wnd wndTitle desc
+  let aboutPopup = say "Проект в рамках курса ФП. Команда: Пархоменко, Любаненко, Янушка"
+  let winPopup = say "Победа!"
+  
   -- создаем список кнопок по массиву
   brd <- generateGame
   btns <- getBtns wnd brd
@@ -117,21 +119,17 @@ gui = do
   -- добавляем действия по кнопке сохранить игру
   evtHandlerOnMenuCommand wnd wxID_SAVEAS $ saveGame ref wnd filePath
  
-  -- вспомогательная функция, для вывода небольшого окна с текстом
-  let say title desc = infoDialog wnd title desc
-  
   -- отдельная кнопочка с помощью "Об авторах", самая важная часть
   topLevelMenuHelp <- menuHelp []
-  menuAbout topLevelMenuHelp [on command := say "Игра пятнашки       "
-								"Проект в рамках курса ФП. Команда: Пархоменко, Любаненко, Янушка"]
+  menuAbout topLevelMenuHelp [on command := aboutPopup]
   
   -- добавляем менюшки к фрейму
   set wnd [menuBar := [topLevelMenu, topLevelMenuHelp]]
   
   -- добавляем действие по нажатию на кнопку на клаве
-  set wnd [on (charKey 's') := makeMove UpMove ref,
-		   on (charKey 'w') := makeMove DownMove ref,
-		   on (charKey 'a') := makeMove RightMove ref,
-		   on (charKey 'd') := makeMove LeftMove ref]
+  set wnd [on (charKey 's') := makeMove UpMove ref winPopup,
+		   on (charKey 'w') := makeMove DownMove ref winPopup,
+		   on (charKey 'a') := makeMove RightMove ref winPopup,
+		   on (charKey 'd') := makeMove LeftMove ref winPopup]
 
   return ()
