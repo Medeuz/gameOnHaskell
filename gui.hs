@@ -5,16 +5,16 @@ import Data.List.Split
 import Data.Maybe
 import PuzzleLogic
 
-btnLabel :: Int -> String
+btnLabel :: Integer -> String
 btnLabel x = if (x == 16) then "" else (show x)
 
-btnList :: Window a -> Array Int Int -> IO ([Button ()])
+btnList :: Window a -> Array Integer Integer -> IO ([Button ()])
 btnList wnd arr = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elems arr)
 
 btnSet :: (Form f, Widget w) => f -> [w] -> IO ()
 btnSet wnd btns = set wnd [layout := column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
 
-redrawGui :: Array Int Int -> IO ()
+redrawGui :: Array Integer Integer -> IO ()
 redrawGui a = undefined
 
 
@@ -71,7 +71,7 @@ gui = do
   set wnd [menuBar := [topLevelMenu, topLevelMenuHelp]]
   
   -- создаем список кнопок по массиву
-  let btnsArray = array (1,16) [(i,i) | i <- [1..16]]
+  btnsArray <- geerateGame
   btns <- btnList wnd btnsArray
   
   -- прикрепляем список кнопок к окну

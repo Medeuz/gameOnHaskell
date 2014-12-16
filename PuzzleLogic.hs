@@ -12,6 +12,7 @@ import Data.Array.ST
 data Moves = UpMove | DownMove | RightMove | LeftMove
 	deriving (Show, Eq)
 
+--генерация случайной перестановки
 shuffle :: [a] -> IO [a]
 shuffle xs = do
         ar <- newArray n xs
@@ -21,55 +22,78 @@ shuffle xs = do
             vj <- readArray ar j
             writeArray ar j vi
             return vj
-  where
-    n = length xs
-    newArray :: Int -> [a] -> IO (IOArray Int a)
-    newArray n xs =  newListArray (1,n) xs
-
-valueK arr = (findElem 16 arr 0) `div` 4 + 1
 	where
+		n = length xs
+		newArray :: Int -> [a] -> IO (IOArray Int a)
+		newArray n xs =  newListArray (1,n) xs
+
+-- проверки на существование решение у случайной перестановки
+checkListIO arr = liftM checkList arr
+	where
+		checkList arr = ((valueK arr) + (valueN arr)) `mod` 2 == 0
+		valueK arr = (findElem 16 arr 0) `div` 4 + 1
 		findElem _ [] _ = (-1)
 		findElem el (x:xs) i = if el == x then i else findElem el xs (i + 1)
-		
+		valueN (x:xs) = fst $ foldl (\(val, pred) next -> (if pred > next then val + 1 else val, next)) (0, x) xs
 	
-valueN (x:xs) = fst $ foldl (\(val, pred) next -> (if pred > next then val + 1 else val, next)) (0, x) xs
+-- генерация случайной игры
+geerateGame = (listArray (0,15)) `liftM` (generateRandonList)
+	where
+		generateRandonList = do
+			let arr = shuffle [1..16]
+			val <- checkListIO arr
+			if val then arr else generateRandonList
 
-getO k n = (k + n) `mod` 2 == 0
-
-checkList arr = ((valueK arr) + (valueN arr)) `mod` 2 == 0
-
-checkListIO arr = liftM checkList arr
-
-generateGame = do
-	let arr = shuffle [1..16]
-	val <- checkListIO arr
-	if val then arr else generateGame
-	
-getArrayGame = (listArray (0,15)) `liftM` (generateGame)
-
-checkMove :: Moves -> IO (Array Integer Integer) -> IO Bool
+-- проверка на допустимость хода
 checkMove m arr = do
-	let i = (elemIndex 16) `liftM` (elems `liftM` arr)
-	let pos = (fromMaybe (-1)) `liftM` i
-	case m of
-		UpMove -> (>0) `liftM` ((`div` 4) `liftM` pos)
-		DownMove -> (<3) `liftM` (`div` 4) `liftM` pos
-		RightMove -> (<3) `liftM` (`mod` 4) `liftM` pos
-		LeftMove -> (>0) `liftM` (`mod` 4) `liftM` pos
-		
-moving m arr = join $ do
-	let check = checkMove m arr
-	check >>= (\val -> if val then return $ getArrayGame else return arr)
-
-
-swap i j arr = elems $ runSTArray $ do
-	let len = length arr
-	newarr <- newListArray (0, len - 1) arr
+	let i = elemIndex 16 $ elems arr
+	if (isJust i) then do
+		let j = fromJust i
+		case m of
+			UpMove -> return $ (j `div` 4) > 0
+			DownMove -> return $ (j `div` 4) < 3
+			RightMove -> return $ (j `mod` 4) < 3
+			LeftMove -> return $ (j `mod` 4) > 0
+	else return False
+	
+--переходы
+moving m arr = do
+	check <- checkMove m arr
+	if check then do
+		let i = fromIntegral (fromJust $ elemIndex 16 $ elems arr) :: Integer
+		return $ swap i (moveTo m i) arr
+	else return arr
+	where
+		moveTo :: Moves -> Integer -> Integer
+		moveTo m i 
+			| m == UpMove = i - 4
+			| m == DownMove = i + 4
+			| m == RightMove = i + 1
+			| otherwise = i - 1
+	
+-- перемена местами элементов в массиве
+swap :: Ix i => Integer -> Integer -> Array i a -> Array Integer a
+swap i j arr = runSTArray $ do
+	let len = fromIntegral (length $ elems arr) :: Integer
+	newarr <- newListArray (0, len-1) (elems arr)
 	swap' i j newarr
 	return newarr
+	where
+		swap' i j arr = do
+			xi <- readArray arr i
+			xj <- readArray arr j
+			writeArray arr i xj
+			writeArray arr j xi
 	
-swap' i j arr = do
-	xi <- readArray arr i
-	xj <- readArray arr j
-	writeArray arr i xj
-	writeArray arr j xi
+-- тесты на корректность
+test = do
+	t <- geerateGame
+	print t
+	r <- moving UpMove t
+	print r
+	r <- moving DownMove t
+	print r
+	r <- moving RightMove t
+	print r
+	r <- moving LeftMove t
+	print r
