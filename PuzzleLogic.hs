@@ -8,6 +8,7 @@ import Data.List
 import Data.Array
 import Control.Monad.ST
 import Data.Array.ST
+import Data.List
 
 data Moves = UpMove | DownMove | RightMove | LeftMove
 	deriving (Show, Eq)
@@ -88,6 +89,20 @@ swap i j arr = runSTArray $ do
 			xj <- readArray arr j
 			writeArray arr i xj
 			writeArray arr j xi
+	
+writeGameToFile :: (Ix i, Show a) => Array i a -> FilePath -> IO ()
+writeGameToFile arr filename = writeFile filename $ unwords $ map show $ elems arr
+
+readGameFromFile :: FilePath -> IO (Array Integer Integer)
+readGameFromFile filename = do
+	elems <- readFromFile filename
+	return $ listArray (0,15) elems
+	
+readFromFile :: FilePath -> IO [Integer]
+readFromFile filename = do
+	content <- readFile filename
+	let elems = concatMap words $ lines content
+	return $ map read elems :: IO [Integer]
 	
 -- тесты на корректность
 test :: IO ()
