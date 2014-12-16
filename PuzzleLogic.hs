@@ -89,7 +89,10 @@ swap i j arr = runSTArray $ do
 			xj <- readArray arr j
 			writeArray arr i xj
 			writeArray arr j xi
-	
+
+checkWin :: Array Integer Integer -> Bool
+checkWin arr = elems arr == [1..16]
+
 writeGameToFile :: (Ix i, Show a) => Array i a -> FilePath -> IO ()
 writeGameToFile arr filename = writeFile filename $ unwords $ map show $ elems arr
 
@@ -103,7 +106,7 @@ readFromFile filename = do
 	content <- readFile filename
 	let elems = concatMap words $ lines content
 	return $ map read elems :: IO [Integer]
-	
+
 -- тесты на корректность
 test :: IO ()
 test = do
