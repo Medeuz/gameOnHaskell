@@ -4,6 +4,8 @@ import Data.Array.IArray
 import Data.List.Split
 import Data.Maybe
 import PuzzleLogic
+import Data.IORef
+import Control.Monad
 
 data GameState = GameState {
 	gameList :: Array Integer Integer,
@@ -19,9 +21,21 @@ getBtns wnd arr = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elem
 setBtns :: (Form f, Widget w) => f -> [w] -> IO ()
 setBtns wnd btns = set wnd [layout := column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
 
-redrawGui :: Array Integer Integer -> IO ()
-redrawGui a = undefined
+resetBtns :: [Button ()] -> Array Integer Integer -> IO ()
+resetBtns btns arr = do
+	let z = zip (elems arr) btns
+	forM_ z $ \p -> set (snd p) [text := (btnLabel (fst p))]
 
+-- callback-функция сделать ход
+makeMove :: Moves -> IORef GameState -> IO ()
+makeMove m ref = do
+	st <- readIORef ref
+	let game = gameList st
+	let btns = btnsList st
+	game' <- moving m game
+	putStrLn $ "Сделан ход: " ++ show m
+	resetBtns btns game'
+	writeIORef ref (GameState game' btns)
 
 -- диалоговое окно, открытия файла
 loadGame :: Window a -> Var(Maybe FilePath) -> IO ()
@@ -80,11 +94,15 @@ gui = do
   
   -- прикрепляем список кнопок к окну
   setBtns wnd btns
+
+  -- IORef
+  let st = GameState game btns
+  ref <- newIORef st
   
   -- добавляем действие по нажатию на кнопку на клаве
-  set wnd [on (charKey 's') := putStrLn "S button pushed",
-		   on (charKey 'w') := putStrLn "W button pushed",
-		   on (charKey 'a') := putStrLn "A button pushed",
-		   on (charKey 'd') := putStrLn "D button pushed"]
+  set wnd [on (charKey 's') := makeMove DownMove ref,
+		   on (charKey 'w') := makeMove UpMove ref,
+		   on (charKey 'a') := makeMove RightMove ref,
+		   on (charKey 'd') := makeMove LeftMove ref]
 
   return ()
