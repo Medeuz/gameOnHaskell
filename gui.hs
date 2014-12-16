@@ -18,7 +18,7 @@ redrawGui :: Array Integer Integer -> IO ()
 redrawGui a = undefined
 
 
---диалоговое окно, открытия файла
+-- диалоговое окно, открытия файла
 loadGame :: Window a -> Var(Maybe FilePath) -> IO ()
 loadGame win filePath = do
 	maybePath <- fileOpenDialog win True True "Загрузка игры..." [("Any file",["*.*"]),("Text",["*.txt"])] "" ""
@@ -28,7 +28,7 @@ loadGame win filePath = do
 		Just path -> do
 		varSet filePath $ Just path
 
---диалоговое окно, сохранения файла		
+-- диалоговое окно, сохранения файла		
 saveGame :: Window a -> Var(Maybe FilePath) -> IO ()
 saveGame win filePath = do
 	maybePath <- fileSaveDialog win True True "Сохранение игры..." [("Any file",["*.*"]),("Text",["*.txt"])] "" ""
@@ -43,31 +43,30 @@ main = start gui
 
 gui :: IO ()
 gui = do
-
   -- создаем окно
   wnd <- frame [ text := "Пятнашки", virtualSize := sz 300 300, bgcolor := blue ]
   
-  --добавляем сверху меню, с новой игрой, загрузкой и сохранением игры
+  -- добавляем сверху меню, с новой игрой, загрузкой и сохранением игры
   topLevelMenu <- menuPane [text := "Игра"]
   menuItem topLevelMenu [on command := putStrLn "Не реализовано", text := "Новая игра"]
   menuAppend topLevelMenu wxID_OPEN "Загрузить игру" " " False
   menuAppend topLevelMenu wxID_SAVEAS "Сохранить игру" " " False
   menuQuit topLevelMenu [on command := wxcAppExit, text := "Выход"]
-  --добавляем действия по кнопке загрузить игру
+  -- обавляем действия по кнопке загрузить игру
   filePath <- varCreate Nothing
   evtHandlerOnMenuCommand wnd wxID_OPEN $ loadGame wnd filePath --по нажатию сохранить в FilePath путь к выбранному файлу
- --добавляем действия по кнопке сохранить игру
+  -- добавляем действия по кнопке сохранить игру
   evtHandlerOnMenuCommand wnd wxID_SAVEAS $ saveGame wnd filePath
  
-  --вспомогательная функция, для вывода небольшого окна с текстом
+  -- вспомогательная функция, для вывода небольшого окна с текстом
   let say title desc = infoDialog wnd title desc
   
-  --отдельная кнопочка с помощью "Об авторах", самая важная часть
+  -- отдельная кнопочка с помощью "Об авторах", самая важная часть
   topLevelMenuHelp <- menuHelp []
   menuAbout topLevelMenuHelp [on command := say "Игра пятнашки       "
 								"Проект в рамках курса ФП. Команда: Пархоменко, Любаненко, Янушка"]
   
-  --добавляем менюшки к фрейму
+  -- добавляем менюшки к фрейму
   set wnd [menuBar := [topLevelMenu, topLevelMenuHelp]]
   
   -- создаем список кнопок по массиву
@@ -76,7 +75,7 @@ gui = do
   
   -- прикрепляем список кнопок к окну
   btnSet wnd btns
-  --добавляем действие по нажатию на кнопку на клаве
+  -- добавляем действие по нажатию на кнопку на клаве
   set wnd [on (charKey 's') := putStrLn "S button pushed",
 		   on (charKey 'w') := putStrLn "W button pushed",
 		   on (charKey 'a') := putStrLn "A button pushed",

@@ -12,7 +12,7 @@ import Data.Array.ST
 data Moves = UpMove | DownMove | RightMove | LeftMove
 	deriving (Show, Eq)
 
---генерация случайной перестановки
+-- генерация случайной перестановки
 shuffle :: [a] -> IO [a]
 shuffle xs = do
         ar <- newArray n xs
@@ -28,7 +28,7 @@ shuffle xs = do
 		newArray n xs =  newListArray (1,n) xs
 
 -- проверки на существование решение у случайной перестановки
-checkListIO :: (Ord a, Num a,Monad m) => m [a] -> m Bool
+checkListIO :: (Ord a, Num a, Monad m) => m [a] -> m Bool
 checkListIO arr = liftM checkList arr
 	where
 		checkList arr = ((valueK arr) + (valueN arr)) `mod` 2 == 0
@@ -59,7 +59,7 @@ checkMove m arr = do
 			LeftMove -> return $ (j `mod` 4) > 0
 	else return False
 	
---переходы
+-- переходы
 moving :: (Num a, Monad m, Eq a) => Moves -> Array Integer a -> m (Array Integer a)
 moving m arr = do
 	check <- checkMove m arr
