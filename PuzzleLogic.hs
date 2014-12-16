@@ -46,6 +46,10 @@ generateGame = (listArray (0,15)) `liftM` (generateRandonList)
 			val <- checkListIO arr
 			if val then arr else generateRandonList
 
+-- генерация игры по умолчанию
+defaultGame :: Array Integer Integer
+defaultGame = array (1,16) [(i,i) | i <- [1..16]]
+
 -- проверка на допустимость хода
 checkMove :: (Ix i, Num a, Monad m, Eq a) => Moves -> Array i a -> m Bool
 checkMove m arr = do
