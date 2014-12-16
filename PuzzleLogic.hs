@@ -57,10 +57,10 @@ checkMove m arr = do
 		RightMove -> (<3) `liftM` (`mod` 4) `liftM` pos
 		LeftMove -> (>0) `liftM` (`mod` 4) `liftM` pos
 		
-moving m arr = do
+moving m arr = join $ do
 	let check = checkMove m arr
-	check
-	--if (==True) `liftM` check then True else False
+	check >>= (\val -> if val then return $ getArrayGame else return arr)
+
 
 swap i j arr = elems $ runSTArray $ do
 	let len = length arr
