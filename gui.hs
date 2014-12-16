@@ -5,14 +5,19 @@ import Data.List.Split
 import Data.Maybe
 import PuzzleLogic
 
+data GameState = GameState {
+	gameList :: Array Integer Integer,
+	btnsList :: [Button ()]	
+}
+
 btnLabel :: Integer -> String
 btnLabel x = if (x == 16) then "" else (show x)
 
-btnList :: Window a -> Array Integer Integer -> IO ([Button ()])
-btnList wnd arr = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elems arr)
+getBtns :: Window a -> Array Integer Integer -> IO ([Button ()])
+getBtns wnd arr = sequence $ map (\x -> button wnd [text := (btnLabel x)]) (elems arr)
 
-btnSet :: (Form f, Widget w) => f -> [w] -> IO ()
-btnSet wnd btns = set wnd [layout := column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
+setBtns :: (Form f, Widget w) => f -> [w] -> IO ()
+setBtns wnd btns = set wnd [layout := column 3 $ map (\x -> margin 3 $ row 3 (map widget x)) (chunksOf 4 btns)]
 
 redrawGui :: Array Integer Integer -> IO ()
 redrawGui a = undefined
@@ -70,11 +75,12 @@ gui = do
   set wnd [menuBar := [topLevelMenu, topLevelMenuHelp]]
   
   -- создаем список кнопок по массиву
-  btnsArray <- generateGame
-  btns <- btnList wnd btnsArray
+  game <- generateGame
+  btns <- getBtns wnd game
   
   -- прикрепляем список кнопок к окну
-  btnSet wnd btns
+  setBtns wnd btns
+  
   -- добавляем действие по нажатию на кнопку на клаве
   set wnd [on (charKey 's') := putStrLn "S button pushed",
 		   on (charKey 'w') := putStrLn "W button pushed",
