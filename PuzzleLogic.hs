@@ -1,8 +1,11 @@
+module PuzzleLogic where
+
 import System.Random
 import Data.Array.IO
 import Control.Monad
 import Data.Maybe
 import Data.List
+import Data.Array
 
 shuffle :: [a] -> IO [a]
 shuffle xs = do
@@ -28,4 +31,13 @@ valueN (x:xs) = fst $ foldl (\(val, pred) next -> (if pred > next then val + 1 e
 
 getO k n = (k + n) `mod` 2 == 0
 
-checkGame arr = ((valueK arr) + (valueN arr)) `mod` 2 == 0
+checkList arr = ((valueK arr) + (valueN arr)) `mod` 2 == 0
+
+checkListIO arr = liftM checkList arr
+
+generateGame = do
+	let arr = shuffle [1..16]
+	val <- checkListIO arr
+	if val then arr else generateGame
+	
+getArrayGame = (listArray (1,16)) `liftM` (generateGame)

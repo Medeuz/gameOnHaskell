@@ -3,6 +3,7 @@ import Graphics.UI.WX
 import Data.Array.IArray
 import Data.List.Split
 import Data.Maybe
+import PuzzleLogic
 
 btnLabel :: Int -> String
 btnLabel x = if (x == 16) then "" else (show x)
