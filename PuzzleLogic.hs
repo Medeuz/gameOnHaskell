@@ -6,6 +6,11 @@ import Control.Monad
 import Data.Maybe
 import Data.List
 import Data.Array
+import Control.Monad.ST
+import Data.Array.ST
+
+data Moves = UpMove | DownMove | RightMove | LeftMove
+	deriving (Show, Eq)
 
 shuffle :: [a] -> IO [a]
 shuffle xs = do
@@ -40,4 +45,31 @@ generateGame = do
 	val <- checkListIO arr
 	if val then arr else generateGame
 	
-getArrayGame = (listArray (1,16)) `liftM` (generateGame)
+getArrayGame = (listArray (0,15)) `liftM` (generateGame)
+
+checkMove :: Moves -> IO (Array Integer Integer) -> IO Bool
+checkMove m arr = do
+	let i = (elemIndex 16) `liftM` (elems `liftM` arr)
+	let pos = (fromMaybe (-1)) `liftM` i
+	case m of
+		UpMove -> (>0) `liftM` ((`div` 4) `liftM` pos)
+		DownMove -> (<3) `liftM` (`div` 4) `liftM` pos
+		RightMove -> (<3) `liftM` (`mod` 4) `liftM` pos
+		LeftMove -> (>0) `liftM` (`mod` 4) `liftM` pos
+		
+moving m arr = do
+	let check = checkMove m arr
+	check
+	--if (==True) `liftM` check then True else False
+
+swap i j arr = elems $ runSTArray $ do
+	let len = length arr
+	newarr <- newListArray (0, len - 1) arr
+	swap' i j newarr
+	return newarr
+	
+swap' i j arr = do
+	xi <- readArray arr i
+	xj <- readArray arr j
+	writeArray arr i xj
+	writeArray arr j xi
