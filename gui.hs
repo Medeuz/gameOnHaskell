@@ -71,7 +71,7 @@ gui = do
   set wnd [menuBar := [topLevelMenu, topLevelMenuHelp]]
   
   -- создаем список кнопок по массиву
-  btnsArray <- geerateGame
+  btnsArray <- generateGame
   btns <- btnList wnd btnsArray
   
   -- прикрепляем список кнопок к окну

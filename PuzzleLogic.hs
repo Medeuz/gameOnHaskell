@@ -28,6 +28,7 @@ shuffle xs = do
 		newArray n xs =  newListArray (1,n) xs
 
 -- проверки на существование решение у случайной перестановки
+checkListIO :: (Ord a, Num a,Monad m) => m [a] -> m Bool
 checkListIO arr = liftM checkList arr
 	where
 		checkList arr = ((valueK arr) + (valueN arr)) `mod` 2 == 0
@@ -37,7 +38,8 @@ checkListIO arr = liftM checkList arr
 		valueN (x:xs) = fst $ foldl (\(val, pred) next -> (if pred > next then val + 1 else val, next)) (0, x) xs
 	
 -- генерация случайной игры
-geerateGame = (listArray (0,15)) `liftM` (generateRandonList)
+generateGame :: IO (Array Integer Integer)
+generateGame = (listArray (0,15)) `liftM` (generateRandonList)
 	where
 		generateRandonList = do
 			let arr = shuffle [1..16]
@@ -45,6 +47,7 @@ geerateGame = (listArray (0,15)) `liftM` (generateRandonList)
 			if val then arr else generateRandonList
 
 -- проверка на допустимость хода
+checkMove :: (Ix i, Num a, Monad m, Eq a) => Moves -> Array i a -> m Bool
 checkMove m arr = do
 	let i = elemIndex 16 $ elems arr
 	if (isJust i) then do
@@ -57,6 +60,7 @@ checkMove m arr = do
 	else return False
 	
 --переходы
+moving :: (Num a, Monad m, Eq a) => Moves -> Array Integer a -> m (Array Integer a)
 moving m arr = do
 	check <- checkMove m arr
 	if check then do
@@ -86,8 +90,9 @@ swap i j arr = runSTArray $ do
 			writeArray arr j xi
 	
 -- тесты на корректность
+test :: IO ()
 test = do
-	t <- geerateGame
+	t <- generateGame
 	print t
 	r <- moving UpMove t
 	print r
