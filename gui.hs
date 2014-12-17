@@ -48,7 +48,7 @@ newGame :: IORef GameState -> IO ()
 newGame ref = do
 	st <- readIORef ref
 	let btns = buttons st
-	brd' <- generateGame
+	brd' <- generateGameIO
 	updateBtns btns brd'
 	writeIORef ref (GameState brd' btns)
 	
@@ -63,7 +63,7 @@ loadGame ref win filePath = do
 		varSet filePath $ Just path
 		st <- readIORef ref
 		let btns = buttons st
-		brd' <- readGameFromFile path
+		brd' <- readGameFromFileIO path
 		updateBtns btns brd'
 		writeIORef ref (GameState brd' btns)
 
@@ -78,7 +78,7 @@ saveGame ref win filePath = do
 			varSet filePath $ Just path
 			st <- readIORef ref
 			let brd = board st
-			writeGameToFile brd path
+			writeGameToFileIO brd path
 		
 main :: IO ()
 main = start gui
@@ -95,7 +95,7 @@ gui = do
   let winPopup = say "Победа!"
   
   -- создаем список кнопок по массиву
-  brd <- generateGame
+  brd <- generateGameIO
   btns <- getBtns wnd brd
   
   -- прикрепляем список кнопок к окну
